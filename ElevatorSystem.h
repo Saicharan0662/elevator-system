@@ -30,6 +30,8 @@ private:
     // Pick the best car for a call at `floor` heading `direction`.
     // Candidates are the nearest REST car and the nearest car already
     // approaching `floor` in the same direction; the closer of the two wins.
+    // If no car can serve without reversing, falls back to the globally
+    // nearest car (it picks the call up on a later sweep).
     // Returns the chosen car's elevatorId.
     int selectElevator(int floor, Direction direction) const;
 
