@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <unordered_map>
 
 #include "Direction.h"
 #include "Elevator.h"
@@ -22,15 +22,22 @@ public:
     static constexpr int MAX_FLOOR = 10;
 
 private:
-    std::vector<std::unique_ptr<Elevator>> elevators;
+    // Keyed by elevatorId for O(1) lookup in requestDrop / getElevator.
+    // Iteration order is unspecified; step() / printStatus() sort by id when
+    // deterministic output matters.
+    std::unordered_map<int, std::unique_ptr<Elevator>> elevators;
 
     // Pick the best car for a call at `floor` heading `direction`.
     // Candidates are the nearest REST car and the nearest car already
     // approaching `floor` in the same direction; the closer of the two wins.
-    // Returns an index into `elevators`.
+    // Returns the chosen car's elevatorId.
     int selectElevator(int floor, Direction direction) const;
 
     bool isValidFloor(int floor) const;
+
+    // Resolve elevators.at(elevatorId), dereference the unique_ptr, and throw a
+    // clear error on an unknown id. One place for the check; two overloads so
+    // both const (getElevator) and mutating (requestDrop) callers can use it.
     Elevator& elevatorById(int elevatorId);
     const Elevator& elevatorById(int elevatorId) const;
 
