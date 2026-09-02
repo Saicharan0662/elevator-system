@@ -134,20 +134,19 @@ void ElevatorSystem::step() {
 void ElevatorSystem::run() {
     // Advance until every car is idle. Bounded so a logic error cannot hang.
     const int maxTicks = 1000;
-    for (int tick = 0; tick < maxTicks; ++tick) {
-        bool allIdle = true;
-        for (const auto& [id, car] : elevators) {
-            (void)id;
-            if (!car->isIdle()) {
-                allIdle = false;
-                break;
-            }
-        }
-        if (allIdle) {
-            return;
-        }
+    for (int tick = 0; tick < maxTicks && !allIdle(); ++tick) {
         step();
     }
+}
+
+bool ElevatorSystem::allIdle() const {
+    for (const auto& [id, car] : elevators) {
+        (void)id;
+        if (!car->isIdle()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 const Elevator& ElevatorSystem::getElevator(int elevatorId) const {

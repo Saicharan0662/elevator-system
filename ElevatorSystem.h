@@ -59,6 +59,9 @@ public:
     // Run ticks until every elevator is idle.
     void run();
 
+    // True when every car is REST with nothing queued.
+    bool allIdle() const;
+
     // Read-only access for drivers / tests.
     const Elevator& getElevator(int elevatorId) const;
 
