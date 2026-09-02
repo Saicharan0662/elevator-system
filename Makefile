@@ -6,10 +6,14 @@ SRCS := $(wildcard *.cpp)
 OBJS := $(SRCS:.cpp=.o)
 HDRS := $(wildcard *.h)
 
-.PHONY: all check clean
+.PHONY: all run check clean
 
-# Full build. Fails at the link stage until the class .cpp files are added.
+# Full build.
 all: $(TARGET)
+
+# Build (if needed) and run the driver.
+run: $(TARGET)
+	./$(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
