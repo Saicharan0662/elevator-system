@@ -94,6 +94,7 @@ int ElevatorSystem::requestPick(int floor, Direction direction) {
     } else {
         car.addDownwardRequest(floor);
     }
+    car.registerPickup(floor);  // awaits a matching requestDrop
     return id;
 }
 
@@ -103,11 +104,19 @@ void ElevatorSystem::requestDrop(int elevatorId, int targetFloor) {
     }
 
     Elevator& car = elevatorById(elevatorId);
-    int here = car.getCurrentFloor();
-    if (targetFloor == here) {
-        return;  // passenger is already on their floor
+
+    // Normal path: park the destination against the pick it belongs to; the car
+    // routes it into upward/downward once it reaches that boarding floor.
+    if (car.bindDrop(targetFloor)) {
+        return;
     }
 
+    // Fallback: no pending pick, so the rider is already aboard. Route the
+    // destination relative to where the car is now.
+    int here = car.getCurrentFloor();
+    if (targetFloor == here) {
+        return;
+    }
     if (targetFloor > here) {
         car.addUpwardRequest(targetFloor);
     } else {
@@ -158,6 +167,16 @@ void ElevatorSystem::printStatus() const {
         for (int floor : car.getDownwardRequests()) {
             std::cout << ' ' << floor;
         }
-        std::cout << " }\n";
+        std::cout << " }";
+
+        const auto& parked = car.getPendingDrops();
+        if (!parked.empty()) {
+            std::cout << "  parked{";
+            for (const auto& [boardingFloor, destFloor] : parked) {
+                std::cout << ' ' << boardingFloor << "->" << destFloor;
+            }
+            std::cout << " }";
+        }
+        std::cout << '\n';
     }
 }

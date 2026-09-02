@@ -30,6 +30,10 @@ const std::set<int>& Elevator::getDownwardRequests() const {
     return downward;
 }
 
+const std::vector<std::pair<int, int>>& Elevator::getPendingDrops() const {
+    return pendingDrops;
+}
+
 // --- Setters -------------------------------------------------------------
 
 void Elevator::setCurrentState(ElevatorState state) {
@@ -48,6 +52,36 @@ void Elevator::addUpwardRequest(int floor) {
 
 void Elevator::addDownwardRequest(int floor) {
     downward.insert(floor);
+}
+
+void Elevator::registerPickup(int boardingFloor) {
+    boardingQueue.push_back(boardingFloor);
+}
+
+bool Elevator::bindDrop(int destinationFloor) {
+    if (boardingQueue.empty()) {
+        return false;  // no waiting pick to attach to; rider is already aboard
+    }
+    int boardingFloor = boardingQueue.front();
+    boardingQueue.pop_front();
+    pendingDrops.emplace_back(boardingFloor, destinationFloor);
+    return true;
+}
+
+void Elevator::promotePendingDropsAt(int floor) {
+    for (auto it = pendingDrops.begin(); it != pendingDrops.end();) {
+        if (it->first != floor) {
+            ++it;
+            continue;
+        }
+        int dest = it->second;
+        if (dest > floor) {
+            upward.insert(dest);
+        } else if (dest < floor) {
+            downward.insert(dest);
+        }
+        it = pendingDrops.erase(it);
+    }
 }
 
 // --- SCAN algorithm ---------------------------------------------------
@@ -120,6 +154,7 @@ void Elevator::step() {
 
     // A stop registered at the floor we are already on: serve it in place.
     if (target == currentFloor) {
+        promotePendingDropsAt(currentFloor);
         upward.erase(currentFloor);
         downward.erase(currentFloor);
         if (isIdle()) {
@@ -130,6 +165,10 @@ void Elevator::step() {
 
     currentState = (target > currentFloor) ? ElevatorState::UP : ElevatorState::DOWN;
     currentFloor += (currentState == ElevatorState::UP) ? 1 : -1;
+
+    // A rider boarding here now has a destination; fold it into the sets before
+    // deciding what this stop serves, so it counts toward the turnaround test.
+    promotePendingDropsAt(currentFloor);
 
     // Serve the floor we just arrived at. The in-direction set is always
     // cleared; the opposite set is cleared only when this floor is the

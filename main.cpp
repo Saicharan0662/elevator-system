@@ -46,7 +46,7 @@ int main() {
 
     // --- Simulate ------------------------------------------------------
     std::cout << "\n== Stepping simulation ==\n";
-    for (int tick = 1; tick <= 12; ++tick) {
+    for (int tick = 1; tick <= 20; ++tick) {
         system.step();
         std::cout << "-- tick " << tick << " --\n";
         system.printStatus();
